@@ -1,9 +1,74 @@
 #!/usr/bin/env bash
 
+# Execute a python script with appended python pathes.
+#
+# Usage:
+# pyexec /path/to/script.py
+#
+# Will append the directory of the script file,
+# as well as pathes specified in .pth file in the
+# directory and its parent directories.
+
+# If this file does not exist, exit.
+if [ ! -f $1 ]; then
+    echo "$1: No such file or directory"
+    exit 1
+fi
+
+# Fetch the directory of the script file
+TGTDIR=$(cd $(dirname $(readlink -f $1) ); pwd)
+
+# Append the target direcotory.
+# We do not append it directly.
+# Instead we use `pathes` to record the directories
+# we need to append.
+pathes=$TGTDIR
+
+# Recursively go to the parent directory,
+# read the .pth file if it exists,
+# and append the specified directories.
+curdir=$(pwd)
+cd $TGTDIR
+while true
+do
+    cddir=$(pwd)
+    if [ -f $cddir/.pth ]; then
+        while read line
+        do
+            if [ -n "$line" ]; then
+                if [ ${line:0:1} = "/" ]; then
+                    pathn=$line
+                else
+                    tmpdir=$cddir
+                    goto=$(echo $line | sed 's/\r//g')
+                    cd $goto
+                    pathn=$(pwd)
+                    cd $tmpdir
+                fi
+                pathes=$pathes:$pathn
+            fi
+        done < $cddir/.pth
+    fi
+    if [[ -z $cddir || $cddir = "/" ]]; then
+        break
+    fi
+    cd ..
+done
+cd $curdir
+
+#echo $pathes
+
+# Now we are going to actually append the directories
+
+# Record the current PYTHONPATH (for restore)
 TMPPATH=$PYTHONPATH
-export PYTHONPATH=$PATHONPATH:$(pwd)
 
-/usr/bin/env python $*
+# Actually append the PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$pathes
 
+# Execute the python script
+python $*
+
+# Restore the previous PYTHONPATH
 export PYTHONPATH=$TMPPATH
 
