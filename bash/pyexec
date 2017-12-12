@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+TMPPATH=$PYTHONPATH
+export PYTHONPATH=$PATHONPATH:$(pwd)
+
+/usr/bin/env python $*
+
+export PYTHONPATH=$TMPPATH
+
