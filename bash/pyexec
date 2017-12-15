@@ -9,6 +9,13 @@
 # as well as pathes specified in .pth file in the
 # directory and its parent directories.
 
+# readlink command
+if command -v greadlink > /dev/null; then
+  readlink=greadlink
+else
+  readlink=readlink
+fi
+
 # If this file does not exist, exit.
 if [ ! -f $1 ]; then
     echo "$1: No such file or directory"
@@ -16,7 +23,10 @@ if [ ! -f $1 ]; then
 fi
 
 # Fetch the directory of the script file
-TGTDIR=$(cd $(dirname $(readlink -f $1) ); pwd)
+curdir=$(pwd)
+cd $(dirname $($readlink -f $1))
+TGTDIR=$(pwd)
+cd $curdir
 
 # Append the target direcotory.
 # We do not append it directly.
