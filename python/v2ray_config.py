@@ -64,6 +64,7 @@ def parse_link(link):
     port  = int(netloc[2])
     return SSEndpoint(address=address, method=method, password=password, port=port, banner=banner)
 
+links = list(filter(lambda link: len(link.netloc) != 0, links))
 endpoints = [parse_link(link) for link in links]
 
 V2RAY_CONFIG_FILE = os.path.join(V2RAY_CONFIG_DIR, 'config.json')
